@@ -56,6 +56,18 @@ process.on('SIGINT', () => {
   });
 });
 
+/** TODO: Idea is to continue unfinished (in-progress) battle if app is killed or stoped somehow
+ * const { Battle } = require('./models');
+ * Battle.findOne({status: 'In-progress'}).lean()
+ *  .then((battle)=> {
+ *     if(battle){
+ *      // call continueBattle funtion or something
+ *      }
+ *   })
+ *
+ *
+ *   */
+
 app.use('/api/v1', ArmyRouter);
 app.use('/api/v1', BattleRouter);
 

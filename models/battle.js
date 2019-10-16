@@ -6,7 +6,6 @@ const battleStatuses = ['In-progress', 'Finished'];
 
 const BattleSchema = new Schema({
   opponents: [{ type: Schema.Types.ObjectId, ref: 'Army' }],
-  isStarted: Boolean,
   status: { type: String, enum: battleStatuses },
 }, { timestamps: true });
 

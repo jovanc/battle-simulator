@@ -1,4 +1,4 @@
-const { Army, attackStrategyEnums } = require('../../models');
+const { Army, attackStrategyEnums, Battle } = require('../../models');
 const error = require('../../middlewares/errorHandling/errorConstants');
 
 
@@ -7,7 +7,9 @@ module.exports.addArmy = async (req, res) => {
 
   if (!name || !units || !attackStrategy) throw new Error(error.MISSING_PARAMETERS);
 
-  // TODO: Check if battle is started
+  const isBattleActive = await Battle.findOne({ status: 'In-progress' }).lean();
+
+  if (isBattleActive) throw new Error(error.NOT_ACCEPTABLE);
 
   const existingArmy = await Army.findOne({ name }).lean();
 
@@ -21,7 +23,7 @@ module.exports.addArmy = async (req, res) => {
 
   const newArmy = await new Army({
     name,
-    units,
+    startUnits: units,
     attackStrategy,
   }).save();
 
