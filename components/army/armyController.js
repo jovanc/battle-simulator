@@ -29,6 +29,6 @@ module.exports.addArmy = async (req, res) => {
 
   return res.status(200).send({
     message: 'Successfully created new army',
-    resutls: newArmy,
+    results: newArmy,
   });
 };
