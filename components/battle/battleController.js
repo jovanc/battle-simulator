@@ -10,10 +10,9 @@ module.exports.startBattle = async (req, res) => {
     Army.find({ isAlive: true }).lean(),
   ]);
 
-  // TODO: DELETE COMMENT AFTER TESTING
-  // if (isBattleActive) throw new Error(error.NOT_ACCEPTABLE);
+  if (isBattleActive) throw new Error(error.NOT_ACCEPTABLE);
 
-  if (armies.length >= 1) {
+  if (armies.length >= 10) {
     const battle = await new Battle({
       opponents: [...armies.map((army) => army._id)],
       status: 'In-progress',
