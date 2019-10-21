@@ -1,6 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const path = require('path');
+const { spawn } = require('child_process');
+const { Battle } = require('./models');
 
 const app = express();
 const {
@@ -26,6 +29,7 @@ mongoose.connect(MONGO_DB, {
   reconnectTries: Number.MAX_VALUE,
   useNewUrlParser: true,
   useCreateIndex: true,
+  useUnifiedTopology: true,
 });
 
 mongoose.connection.on('connected', () => {
@@ -56,17 +60,26 @@ process.on('SIGINT', () => {
   });
 });
 
-/** TODO: Idea is to continue unfinished (in-progress) battle if app is killed or stoped somehow
- * const { Battle } = require('./models');
- * Battle.findOne({status: 'In-progress'}).lean()
- *  .then((battle)=> {
- *     if(battle){
- *      // call continueBattle funtion or something
- *      }
- *   })
- *
- *
- *   */
+// Check if there is unfinished battles and continue it
+Battle.findOne({ status: 'In-progress' }).lean()
+  .then((battle) => {
+    if (battle) {
+      console.log('Continuing unfinished battle');
+
+      // create child proccess that prints messages in main process
+      const filePath = path.join(__dirname, 'components/simulator/simulator');
+      console.log('TCL: filePath', filePath);
+      const child = spawn('node', [filePath, 'child'], { stdio: 'inherit' });
+
+      child.on('exit', () => { console.log('Simulator app closed'); });
+      child.on('disconnect', () => { console.log('Simulator app killed or disconnected'); });
+      child.on('error', (err) => { console.log('Ooops error happened in simulator app', err); });
+    }
+  })
+  .catch((err) => {
+    console.log(err);
+    process.exit(0);
+  });
 
 app.use('/api/v1', ArmyRouter);
 app.use('/api/v1', BattleRouter);
