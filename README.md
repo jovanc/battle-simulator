@@ -27,7 +27,7 @@ Testing features are in TODO list
 
 
 Battle Simulator
-Author: Zoran Lazic
+Task Author: Zoran Lazic
 
 Task description
 
