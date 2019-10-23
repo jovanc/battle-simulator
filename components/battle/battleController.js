@@ -7,7 +7,7 @@ const error = require('../../middlewares/errorHandling/errorConstants');
 module.exports.startBattle = async (req, res) => {
   const [isBattleActive, armies] = await Promise.all([
     Battle.findOne({ status: 'In-progress' }).lean(),
-    Army.find({ isAlive: true }).lean(),
+    Army.find({ isAlive: true }).sort({ createdAt: 1 }).lean(),
   ]);
 
   if (isBattleActive) throw new Error(error.NOT_ACCEPTABLE);
@@ -38,9 +38,7 @@ module.exports.startBattle = async (req, res) => {
 
 
 module.exports.resetBattle = async (req, res) => {
-  const { battleId } = req.params;
-
-  const battle = await Battle.findOne({ _id: battleId, status: 'In-progress' }).lean();
+  const battle = await Battle.findOne({ status: 'In-progress' }).lean();
 
   if (!battle) throw new Error(error.NOT_FOUND);
 
@@ -58,7 +56,7 @@ module.exports.resetBattle = async (req, res) => {
   const toExecute = [];
 
   toExecute.push(Battle.findOneAndUpdate(
-    { _id: battleId },
+    { _id: battle._id },
     { $set: { createdAt: new Date() } },
   ).lean());
 
@@ -67,7 +65,7 @@ module.exports.resetBattle = async (req, res) => {
       { $set: { leftUnits: army.startUnits, isAlive: true } }));
   });
 
-  toExecute.push(BattleLog.deleteMany({ battle: battleId }));
+  toExecute.push(BattleLog.deleteMany({ battle: battle._id }));
 
   const [restartedBattle] = await Promise.all(toExecute);
 
@@ -87,7 +85,7 @@ module.exports.resetBattle = async (req, res) => {
   });
 };
 
-
+// Method has fileter by battle status ( all (without parameter) or 'In-progress' or 'Finished')
 module.exports.getListOfBattles = async (req, res) => {
   const { skip = 0, status } = req.query;
   let { limit } = req.query;
@@ -120,7 +118,7 @@ module.exports.getSpecificBattleLog = async (req, res) => {
 
   if (!battleId) throw new Error(error.MISSING_PARAMETERS);
 
-  if (parseInt(limit, 10) > 1000 || !limit) limit = 1000;
+  if (parseInt(limit, 10) > 250 || !limit) limit = 250;
 
   const battle = await Battle.findOne({ _id: battleId }).lean();
 

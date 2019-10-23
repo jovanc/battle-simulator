@@ -7,7 +7,6 @@ const { createManyArmies } = require('../test-TODO/helpers');
 //* If no argument, random number of armies will be created
 
 const number = process.argv[2];
-console.log('TCL: process.argv', process.argv);
 
 createManyArmies({ number }).then((res) => {
   console.log(`Successfully created ${res.length} armies`);

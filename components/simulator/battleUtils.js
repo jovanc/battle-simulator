@@ -25,6 +25,28 @@ const armyProperties = async (armyId) => {
   return army;
 };
 
+
+// check if there is only one army standing
+async function isBattleFinished() {
+  const leftArmies = await Army.countDocuments({ isAlive: true, leftUnits: { $gt: 0 } });
+  if (leftArmies <= 1) {
+    // TODO: Edge case: 2 armies made same time (or really close time) attack and both dead
+    // if all armies are dead, return last attack from log, and make one army alive.
+    // Delete log, return units to amry ...
+    const [winner] = await Promise.all([
+      Army.findOne({ isAlive: true }).lean(),
+      Battle.updateOne({ status: 'In-progress' }, { $set: { status: 'Finished' } }),
+    ]);
+    console.log(`Battle finished!
+    Winner is: ${winner.name}
+    Winner left units: ${winner.leftUnits}`);
+    process.exit(0);
+    return true;
+  }
+  return false;
+}
+
+
 // choose opponent by attack strategy or attacker army
 const chooseOpponent = async (attackerArmyId, attackerArmyStrategy) => {
   const armies = await Army
@@ -33,15 +55,8 @@ const chooseOpponent = async (attackerArmyId, attackerArmyStrategy) => {
     .lean();
 
   if (armies.length < 1) {
-    const armiesLeft = await Army.countDocuments({ isAlive: true, leftUnits: { $gt: 0 } });
-
-    if (armiesLeft.count === 1) {
-      // TODO: Edge case: 2 armies made same time (or really close time) attack and both dead
-      // if all armies are dead, return last attack from log, and make one army alive.
-      // Delete log, return units to amry ...
-      await Battle.updateOne({ status: 'In-progress' }, { $set: { status: 'Finished' } });
-      return false;
-    }
+    await isBattleFinished();
+    return false;
   }
 
   let opponent;
@@ -65,33 +80,35 @@ const chooseOpponent = async (attackerArmyId, attackerArmyStrategy) => {
 // make single attack and create attack log.
 const createAttackAndLog = async (battleId, attackerId) => {
   const attacker = await armyProperties(attackerId);
+  if (!attacker) {
+    await isBattleFinished();
+    return;
+  }
   const { attackDamage, reloadTime, attackStrategy } = attacker;
 
   const opponent = await chooseOpponent(attackerId, attackStrategy);
 
   if (!opponent) {
-    await Battle.updateOne({ status: 'In-progress' }, { $set: { status: 'Finished' } });
-    // FIXME: Simulator exit too soon.
-    process.exit(0);
+    await isBattleFinished();
+    return;
   }
 
-  if (attacker && opponent) {
-    console.log(`Attacker: ${attacker.name},  Opponent: ${opponent.name},  Attack damage: ${attackDamage}`);
-    const [updatedOpponent] = await Promise.all([
-      Army.findOneAndUpdate({ _id: opponent._id },
-        { $inc: { leftUnits: -attackDamage } }, { new: true }).lean(),
-      new BattleLog({
-        battle: battleId,
-        attacker: attackerId,
-        opponent: opponent._id,
-        attackDamage,
-        reloadTime,
-      }).save(),
-    ]);
+  console.log(`Attacker: ${attacker.name},  Opponent: ${opponent.name},  Attack damage: ${attackDamage}  Attack reload time: ${reloadTime}ms`);
+  const [updatedOpponent] = await Promise.all([
+    Army.findOneAndUpdate({ _id: opponent._id },
+      { $inc: { leftUnits: -attackDamage } }, { new: true }).lean(),
+    new BattleLog({
+      battle: battleId,
+      attacker: attackerId,
+      opponent: opponent._id,
+      attackDamage,
+      reloadTime,
+    }).save(),
+  ]);
 
-    if (updatedOpponent.leftUnits < 1) {
-      await Army.updateOne({ _id: opponent._id }, { $set: { isAlive: false } });
-    }
+  if (updatedOpponent.leftUnits < 1) {
+    await Army.updateOne({ _id: opponent._id }, { $set: { isAlive: false } });
+    await isBattleFinished();
   }
 };
 
@@ -99,4 +116,5 @@ module.exports = {
   armyProperties,
   chooseOpponent,
   createAttackAndLog,
+  isBattleFinished,
 };
