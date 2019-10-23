@@ -60,8 +60,6 @@ process.on('SIGINT', () => {
   });
 });
 
-// Check if there is unfinished battles and continue it
-// TODO: TEST THIS METHOD
 Battle.findOne({ status: 'In-progress' }).lean()
   .then((battle) => {
     if (battle) {

@@ -33,13 +33,13 @@ async function isBattleFinished() {
     // TODO: Edge case: 2 armies made same time (or really close time) attack and both dead
     // if all armies are dead, return last attack from log, and make one army alive.
     // Delete log, return units to amry ...
-    const [winner] = await Promise.all([
-      Army.findOne({ isAlive: true }).lean(),
-      Battle.updateOne({ status: 'In-progress' }, { $set: { status: 'Finished' } }),
-    ]);
+    const winner = await Army.findOne({ isAlive: true }).lean();
+    await Battle.updateOne({ status: 'In-progress' }, { $set: { status: 'Finished', winner: winner._id } });
+
     console.log(`Battle finished!
-    Winner is: ${winner.name}
-    Winner left units: ${winner.leftUnits}`);
+      Winner is: ${winner.name}
+      Winner left units: ${winner.leftUnits}`);
+
     process.exit(0);
     return true;
   }

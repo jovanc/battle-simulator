@@ -3,7 +3,8 @@ const { Army, Battle, BattleLog } = require('../../models');
 const { MONGO_DB } = require('../../configuration/environments');
 const { createAttackAndLog, isBattleFinished } = require('./battleUtils');
 
-// function that create delay
+
+// function that create delay for reloading time
 const waitReloadTime = async (time) => {
   await new Promise((resolve) => setTimeout(() => {
     resolve('done');
@@ -19,9 +20,10 @@ async function armyAttack(armyId, battleId) {
   }
   const reloadTime = 10 * army.leftUnits;
   if (army.leftUnits > 0) {
+    await isBattleFinished();
     await createAttackAndLog(battleId, armyId);
     await waitReloadTime(reloadTime);
-    await isBattleFinished();
+
     armyAttack(armyId, battleId);
   }
 }
@@ -55,7 +57,11 @@ async function startBattle(battleId, opponents) {
 // Initiate simulator when battle is in progress
 Battle.findOne({ status: 'In-progress' }).lean()
   .then((battle) => {
-    if (battle) startBattle(battle._id, battle.opponents);
+    // update battle with current process PID - so simulator could be restarted
+    Battle.updateOne({ _id: battle._id }, { $set: { processId: process.pid } })
+      .then(() => {
+        if (battle) startBattle(battle._id, battle.opponents);
+      });
   })
   .catch((err) => {
     console.log(err);

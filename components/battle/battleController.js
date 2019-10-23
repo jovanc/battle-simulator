@@ -42,16 +42,10 @@ module.exports.resetBattle = async (req, res) => {
 
   if (!battle) throw new Error(error.NOT_FOUND);
 
-  // this update will manualy kill background running simulator
-  // TODO: find better way to kill running child proccess
-  await Army.updateMany(
-    { _id: { $in: battle.opponents } },
-    { $set: { isAlive: false, leftUnits: 0 } },
-  );
-  // wait max reload time, to stop all attacks - remove this afrer improved kill proccesses
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  // stop simulator process running
+  process.kill(battle.processId);
 
-  const armies = await Army.find({ _id: { $in: battle.opponents } }).lean();
+  const armies = await Army.find({ _id: { $in: battle.opponents } }).sort({ createdAt: 1 }).lean();
 
   const toExecute = [];
 
@@ -85,7 +79,7 @@ module.exports.resetBattle = async (req, res) => {
   });
 };
 
-// Method has fileter by battle status ( all (without parameter) or 'In-progress' or 'Finished')
+// Method has filter by battle status ( all (without parameter) or 'In-progress' or 'Finished')
 module.exports.getListOfBattles = async (req, res) => {
   const { skip = 0, status } = req.query;
   let { limit } = req.query;
@@ -97,6 +91,7 @@ module.exports.getListOfBattles = async (req, res) => {
 
   const [battleLists, totalCount] = await Promise.all([
     Battle.find(query)
+      .sort({ createdAt: -1 })
       .skip(parseInt(skip, 10))
       .limit(parseInt(limit, 10))
       .lean(),
@@ -120,7 +115,10 @@ module.exports.getSpecificBattleLog = async (req, res) => {
 
   if (parseInt(limit, 10) > 250 || !limit) limit = 250;
 
-  const battle = await Battle.findOne({ _id: battleId }).lean();
+  const battle = await Battle
+    .findOne({ _id: battleId })
+    .populate('winner', '_id name startUnits leftUnits attackStrategy')
+    .lean();
 
   const [armies, battleLogs, totalCount] = await Promise.all([
     Army.find({ _id: { $in: battle.opponents } }).lean(),
