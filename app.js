@@ -60,7 +60,6 @@ process.on('SIGINT', () => {
   });
 });
 
-// Check if there is unfinished battles and continue it
 Battle.findOne({ status: 'In-progress' }).lean()
   .then((battle) => {
     if (battle) {
@@ -68,7 +67,6 @@ Battle.findOne({ status: 'In-progress' }).lean()
 
       // create child proccess that prints messages in main process
       const filePath = path.join(__dirname, 'components/simulator/simulator');
-      console.log('TCL: filePath', filePath);
       const child = spawn('node', [filePath, 'child'], { stdio: 'inherit' });
 
       child.on('exit', () => { console.log('Simulator app closed'); });
