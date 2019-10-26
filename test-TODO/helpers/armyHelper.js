@@ -1,6 +1,6 @@
 const faker = require('faker');
 
-const { Army, attackStrategyEnums } = require('../../models');
+const { Army, attackStrategyEnums } = require('../../src/models');
 
 
 const createArmy = async ({ name, units, attackStrategy } = {}) => new Army({
