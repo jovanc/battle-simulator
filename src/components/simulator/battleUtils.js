@@ -1,10 +1,13 @@
 const { Army, Battle, BattleLog } = require('../../models');
+const { attackChancePerUnit, attackDamagePerUnit, attackReloadTimePerUnit } = require('../../globalSettings');
 
 // get army (state) properties from DB and calculate additional properties
 const armyProperties = async (armyId) => {
 	const army = await Army.findOne({ _id: armyId, isAlive: true }).lean();
 
-	if (!army) return false;
+	if (!army) {
+		return false;
+	}
 
 	if (army.leftUnits <= 0) {
 		await Army.updateOne({ _id: armyId }, { $set: { isAlive: false } });
@@ -14,13 +17,13 @@ const armyProperties = async (armyId) => {
 	const { leftUnits } = army;
 
 	// returns true or false
-	army.attackChance = Math.random() <= (0.01 * leftUnits);
+	army.attackChance = Math.random() <= (attackChancePerUnit * leftUnits);
 
 	// It is = 0 if there was no attack chance or whole number of units
-	army.attackDamage = army.attackChance ? Math.floor(0.5 * leftUnits) : 0;
+	army.attackDamage = army.attackChance ? Math.floor(attackDamagePerUnit * leftUnits) : 0;
 
 	// relode time in ms
-	army.reloadTime = 10 * leftUnits;
+	army.reloadTime = attackReloadTimePerUnit * leftUnits;
 
 	return army;
 };

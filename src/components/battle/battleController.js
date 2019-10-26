@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 
 const { Army, Battle, BattleLog } = require('../../models');
 const error = require('../../middlewares/errorHandling/errorConstants');
+const { minArmiesForBattle } = require('../../globalSettings');
 
 module.exports.startBattle = async (req, res) => {
 	const [isBattleActive, armies] = await Promise.all([
@@ -10,9 +11,11 @@ module.exports.startBattle = async (req, res) => {
 		Army.find({ isAlive: true }).sort({ createdAt: 1 }).lean(),
 	]);
 
-	if (isBattleActive) throw new Error(error.NOT_ACCEPTABLE);
+	if (isBattleActive) {
+		throw new Error(error.NOT_ACCEPTABLE);
+	}
 
-	if (armies.length >= 10) {
+	if (armies.length >= minArmiesForBattle) {
 		const battle = await new Battle({
 			opponents: [...armies.map((army) => army._id)],
 			status: 'In-progress',
@@ -40,7 +43,9 @@ module.exports.startBattle = async (req, res) => {
 module.exports.resetBattle = async (req, res) => {
 	const battle = await Battle.findOne({ status: 'In-progress' }).lean();
 
-	if (!battle) throw new Error(error.NOT_FOUND);
+	if (!battle) {
+		throw new Error(error.NOT_FOUND);
+	}
 
 	// stop simulator process running
 	process.kill(battle.processId);
@@ -84,10 +89,14 @@ module.exports.getListOfBattles = async (req, res) => {
 	const { skip = 0, status } = req.query;
 	let { limit } = req.query;
 
-	if (parseInt(limit, 10) > 100 || !limit) limit = 100;
+	if (parseInt(limit, 10) > 100 || !limit) {
+		limit = 100;
+	}
 
 	const query = {};
-	if (status) query.status = status;
+	if (status) {
+		query.status = status;
+	}
 
 	const [battleLists, totalCount] = await Promise.all([
 		Battle.find(query)
@@ -111,9 +120,13 @@ module.exports.getSpecificBattleLog = async (req, res) => {
 	const { skip = 0 } = req.query;
 	let { limit } = req.query;
 
-	if (!battleId) throw new Error(error.MISSING_PARAMETERS);
+	if (!battleId) {
+		throw new Error(error.MISSING_PARAMETERS);
+	}
 
-	if (parseInt(limit, 10) > 250 || !limit) limit = 250;
+	if (parseInt(limit, 10) > 250 || !limit) {
+		limit = 250;
+	}
 
 	const battle = await Battle
 		.findOne({ _id: battleId })
