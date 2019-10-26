@@ -6,9 +6,9 @@ const { catchAsyncError } = require('../../middlewares/errorHandling/catchAsynch
 const router = express.Router();
 
 router
-  .patch('/battle/start', catchAsyncError(BattleController.startBattle))
-  .patch('/battle/reset', catchAsyncError(BattleController.resetBattle))
-  .get('/battle', catchAsyncError(BattleController.getListOfBattles))
-  .get('/battle/:battleId', catchAsyncError(BattleController.getSpecificBattleLog));
+	.patch('/battle/start', catchAsyncError(BattleController.startBattle))
+	.patch('/battle/reset', catchAsyncError(BattleController.resetBattle))
+	.get('/battle', catchAsyncError(BattleController.getListOfBattles))
+	.get('/battle/:battleId', catchAsyncError(BattleController.getSpecificBattleLog));
 
 module.exports = router;

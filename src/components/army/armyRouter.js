@@ -6,6 +6,6 @@ const { catchAsyncError } = require('../../middlewares/errorHandling/catchAsynch
 const router = express.Router();
 
 router
-  .post('/army', catchAsyncError(ArmyController.addArmy));
+	.post('/army', catchAsyncError(ArmyController.addArmy));
 
 module.exports = router;

@@ -8,9 +8,9 @@ require('../src/configuration/databaseConnection');
 const number = process.argv[2];
 
 createManyArmies({ number }).then((res) => {
-  console.log(`Successfully created ${res.length} armies`);
-  process.exit();
+	console.log(`Successfully created ${res.length} armies`);
+	process.exit();
 }).catch((err) => {
-  console.log('Ooops! Some kind of error', err);
-  process.exit();
+	console.log('Ooops! Some kind of error', err);
+	process.exit();
 });

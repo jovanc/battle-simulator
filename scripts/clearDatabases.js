@@ -7,16 +7,16 @@ require('../src/configuration/databaseConnection');
 
 
 Promise.all([
-  Army.deleteMany({}),
-  Battle.deleteMany({}),
-  BattleLog.deleteMany({}),
+	Army.deleteMany({}),
+	Battle.deleteMany({}),
+	BattleLog.deleteMany({}),
 ]).then(() => {
-  console.log(`Successfully deleted:
+	console.log(`Successfully deleted:
   - Armies,
   - Battles,
   - Battle logs`);
-  process.exit();
+	process.exit();
 }).catch((err) => {
-  console.log('Ooops! Some kind of error', err);
-  process.exit();
+	console.log('Ooops! Some kind of error', err);
+	process.exit();
 });

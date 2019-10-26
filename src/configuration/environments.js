@@ -9,10 +9,10 @@ require('dotenv').config({ path: envPath });
  * add it to the respective .env file and to the object below.
  */
 const environmentVariables = {
-  NODE_ENV: process.env.NODE_ENV,
-  PORT: process.env.PORT,
-  MONGO_DB: process.env.MONGO_DB,
-  APP_URL: process.env.APP_URL,
+	NODE_ENV: process.env.NODE_ENV,
+	PORT: process.env.PORT,
+	MONGO_DB: process.env.MONGO_DB,
+	APP_URL: process.env.APP_URL,
 };
 
 /**
@@ -20,25 +20,25 @@ const environmentVariables = {
  * @returns {Object}
  */
 const getEnvVariables = () => {
-  if (!environmentVariables.NODE_ENV) {
-    throw new Error('Missing NODE_ENV environment variable');
-  }
+	if (!environmentVariables.NODE_ENV) {
+		throw new Error('Missing NODE_ENV environment variable');
+	}
 
-  return {
-    NODE_ENV: environmentVariables.NODE_ENV,
-    PORT: environmentVariables.PORT,
-    MONGO_DB: environmentVariables.MONGO_DB,
-    APP_URL: environmentVariables.APP_URL || `http://localhost:${environmentVariables.PORT}/`,
-  };
+	return {
+		NODE_ENV: environmentVariables.NODE_ENV,
+		PORT: environmentVariables.PORT,
+		MONGO_DB: environmentVariables.MONGO_DB,
+		APP_URL: environmentVariables.APP_URL || `http://localhost:${environmentVariables.PORT}/`,
+	};
 };
 
 // Check for missing environment variables
 Object
-  .entries(getEnvVariables())
-  .forEach(([key, value]) => {
-    if (!value) {
-      throw new Error(`Missing ${key} environment variable`);
-    }
-  });
+	.entries(getEnvVariables())
+	.forEach(([key, value]) => {
+		if (!value) {
+			throw new Error(`Missing ${key} environment variable`);
+		}
+	});
 
 module.exports = getEnvVariables();
