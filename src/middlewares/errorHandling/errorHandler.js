@@ -3,7 +3,7 @@ const errorMessage = require('./errorConstants');
 module.exports = () => (err, req, res, next) => {
 	const error = {};
 
-	console.log(err);
+	// console.log(err);
 
 	switch (err.message) {
 	case errorMessage.MISSING_PARAMETERS:

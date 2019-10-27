@@ -100,7 +100,7 @@ async function getListOfArmies(req, res) {
 }
 
 async function getArmyDetail(req, res) {
-	const { armyId } = req;
+	const { armyId } = req.params;
 
 	const results = await Army.findOne({ _id: armyId }).lean();
 
