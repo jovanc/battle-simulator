@@ -1,5 +1,5 @@
 const { Army, Battle, BattleLog } = require('../../models');
-const { attackChancePerUnit, attackDamagePerUnit, attackReloadTimePerUnit } = require('../../globalSettings');
+const { attackChancePerUnit, attackDamagePerUnit, attackReloadTimePerUnit } = require('../../configuration/globalSettings');
 
 // get army (state) properties from DB and calculate additional properties
 const armyProperties = async (armyId) => {

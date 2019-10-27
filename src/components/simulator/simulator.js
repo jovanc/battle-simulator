@@ -1,5 +1,6 @@
 const { Army, Battle, BattleLog } = require('../../models');
-const { createAttackAndLog, isBattleFinished } = require('./battleUtils');
+const { createAttackAndLog, isBattleFinished } = require('./battleFunctions');
+const { attackReloadTimePerUnit } = require('../../configuration/globalSettings');
 
 require('../../configuration/databaseConnection');
 
@@ -17,7 +18,7 @@ async function armyAttack(armyId, battleId) {
 		await isBattleFinished();
 		return;
 	}
-	const reloadTime = 10 * army.leftUnits;
+	const reloadTime = attackReloadTimePerUnit * army.leftUnits;
 	if (army.leftUnits > 0) {
 		await isBattleFinished();
 		await createAttackAndLog(battleId, armyId);

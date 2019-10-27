@@ -1,27 +1,69 @@
+const express = require('express');
+
+const router = express.Router();
 const path = require('path');
 const { spawn } = require('child_process');
+// TODO: delete
+const { catchAsyncError } = require('../../middlewares/errorHandling/catchAsynchError');
 
 const { Army, Battle, BattleLog } = require('../../models');
 const error = require('../../middlewares/errorHandling/errorConstants');
-const { minArmiesForBattle } = require('../../globalSettings');
+const { minArmiesForBattle } = require('../../configuration/globalSettings');
 
-module.exports.startBattle = async (req, res) => {
-	const [isBattleActive, armies] = await Promise.all([
-		Battle.findOne({ status: 'In-progress' }).lean(),
-		Army.find({ isAlive: true }).sort({ createdAt: 1 }).lean(),
-	]);
 
-	if (isBattleActive) {
+async function createBattle(req, res) {
+	const { opponents } = req.body;
+
+	if (!opponents) {
+		throw new Error(error.MISSING_PARAMETERS);
+	}
+
+	if (!Array.isArray(opponents) || opponents.length < minArmiesForBattle) {
 		throw new Error(error.NOT_ACCEPTABLE);
 	}
 
-	if (armies.length >= minArmiesForBattle) {
-		const battle = await new Battle({
-			opponents: [...armies.map((army) => army._id)],
-			status: 'In-progress',
-		}).save();
+	const armiesFound = await Army.find(
+		{ _id: { $in: opponents }, isAlive: true, leftUnits: { $gt: 0 } }
+	).sort({ createdAt: 1 }).lean();
 
-		console.log(`Game started at: ${battle.createdAt}`);
+	if (armiesFound.length !== opponents.length) {
+		throw new Error(error.NOT_ACCEPTABLE);
+	}
+
+	// TODO: maybe few more IFs, but this will do for now.
+
+	const createdBattle = await new Battle({
+		opponents: armiesFound.map((army) => army._id),
+		status: 'New',
+	}).save();
+
+	return res.status(200).send({
+		message: 'Successfully started game',
+		results: createdBattle,
+	});
+}
+
+
+async function startBattle(req, res) {
+	const { battleId } = req.params;
+
+	let battle = await Battle.findOne({ _id: battleId, status: 'New' }).lean();
+
+	if (!battle) {
+		throw new Error(error.NOT_FOUND);
+	}
+
+	const armies = await Army.find({ _id: { $in: battle.opponents }, isAlive: true })
+		.sort({ createdAt: 1 }).lean();
+
+	if (armies.length >= minArmiesForBattle) {
+		battle = await Battle.findOneAndUpdate(
+			{ _id: battleId },
+			{ $set: { status: 'In-progress' } },
+			{ new: true }
+		).lean();
+
+		console.log(`Game started at: ${battle.updatedAt}`);
 
 		// create child proccess that prints messages in main process
 		const filePath = path.join(__dirname, '../simulator/simulator');
@@ -37,18 +79,23 @@ module.exports.startBattle = async (req, res) => {
 		});
 	}
 	throw new Error(error.NOT_ACCEPTABLE);
-};
+}
 
 
-module.exports.resetBattle = async (req, res) => {
-	const battle = await Battle.findOne({ status: 'In-progress' }).lean();
+async function resetBattle(req, res) {
+	const { battleId } = req.params;
+	const battle = await Battle.findOne({ _id: battleId }).lean();
 
 	if (!battle) {
 		throw new Error(error.NOT_FOUND);
 	}
 
 	// stop simulator process running
-	process.kill(battle.processId);
+	if (battle.status === 'In-progress') {
+		process.kill(battle.processId);
+	} else {
+		await Battle.updateOne({ _id: battleId }, { $set: { status: 'In-progress' } });
+	}
 
 	const armies = await Army.find({ _id: { $in: battle.opponents } }).sort({ createdAt: 1 }).lean();
 
@@ -82,10 +129,10 @@ module.exports.resetBattle = async (req, res) => {
 		message: 'Successfully restarted game',
 		results: restartedBattle,
 	});
-};
+}
 
-// Method has filter by battle status ( all (without parameter) or 'In-progress' or 'Finished')
-module.exports.getListOfBattles = async (req, res) => {
+// Method has filter by battle status ( all (without parameter) or 'New' or 'In-progress' or 'Finished')
+async function getListOfBattles(req, res) {
 	const { skip = 0, status } = req.query;
 	let { limit } = req.query;
 
@@ -112,10 +159,10 @@ module.exports.getListOfBattles = async (req, res) => {
 		results: battleLists,
 		totalCount,
 	});
-};
+}
 
 
-module.exports.getSpecificBattleLog = async (req, res) => {
+async function getSpecificBattleLog(req, res) {
 	const { battleId } = req.params;
 	const { skip = 0 } = req.query;
 	let { limit } = req.query;
@@ -151,4 +198,15 @@ module.exports.getSpecificBattleLog = async (req, res) => {
 		battleLogs,
 		totalCount,
 	});
-};
+}
+
+// Router for battles
+
+router
+	.post('/battle', catchAsyncError(createBattle))
+	.patch('/battle/:battleId/start', catchAsyncError(startBattle))
+	.patch('/battle/:battleId/reset', catchAsyncError(resetBattle))
+	.get('/battle', catchAsyncError(getListOfBattles))
+	.get('/battle/:battleId', catchAsyncError(getSpecificBattleLog));
+
+module.exports = router;

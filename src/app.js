@@ -14,8 +14,8 @@ const {
 
 const { name: appName } = require('../package.json');
 const ErrorHandler = require('./middlewares/errorHandling/errorHandler');
-const ArmyRouter = require('./components/army/armyRouter');
-const BattleRouter = require('./components/battle/battleRouter');
+const ArmyRouter = require('./components/army/armyController');
+const BattleRouter = require('./components/battle/battleController');
 
 
 mongoose.Promise = global.Promise;

@@ -1,5 +1,5 @@
 const faker = require('faker');
-const { minUnits, maxUnits, minArmiesForBattle } = require('../../src/globalSettings');
+const { minUnits, maxUnits, minArmiesForBattle } = require('../../src/configuration/globalSettings');
 
 const { Army, attackStrategyEnums } = require('../../src/models');
 

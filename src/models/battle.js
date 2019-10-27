@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
-const battleStatuses = ['In-progress', 'Finished'];
+const battleStatuses = ['New', 'In-progress', 'Finished'];
 
 const BattleSchema = new Schema({
 	opponents: [{ type: Schema.Types.ObjectId, ref: 'Army' }],
