@@ -11,11 +11,13 @@ To run app (development env) please start mongoDB and run command:
 Scripts / Helpers (ENV=development,test or production):
 
 Drop all documents from collections in Development environment
-- NODE_ENV=development node scripts/clearDatabases.js   
+- NODE_ENV=development node scripts/clearDatabases.js
 
 create 15 armies in Development environment. If no flag, then the number of armies will be randome.
-- NODE_ENV=development node scripts/createFakeArmies.js 15   
+- NODE_ENV=development node scripts/createFakeArmies.js 15
 
+create new battle with 20 armies in Development environment. If no flag, then the number of armies will minimum number of armies to start battle - global settings.
+- NODE_ENV=development node scripts/createNewBattle.js 20
 
 Testing features are in TODO list
 - npm test
@@ -84,7 +86,7 @@ Attack chances
 Not every attack is successful. Army has 1% of success for every alive unit in it.
 
 Attack damage
-The army always does 0.5 damage per unit, when an attack is successful. 
+The army always does 0.5 damage per unit, when an attack is successful.
 
 Received damage
 For every whole point of received damage from the attacking army, one unit is removed from the attacked army.
@@ -93,7 +95,7 @@ Reload time
 Reload time takes 0.01 seconds per 1 unit in the army.
 
 
-The army is dead (defeated) when all units are dead. 
+The army is dead (defeated) when all units are dead.
 The battle is over when there is one army standing.
 
 THERE IS NO UI FOR THIS TASK
