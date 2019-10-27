@@ -116,3 +116,20 @@ You must use ESLint with Airbnb config
 
 Database
 MongoDB is a mandatory DB
+
+------------------------------------------------
+ Additional requests - after first code review
+------------------------------------------------
+
+- Dotenv is always in the root folder of the project. Make your script to load files from /.env.{environment}
+- Structure of the project should be next: In the root folder, we have packages, index.js, node_modules and src folder, also other files/folder not related to the main code. Main code should be inside of the src folder. Please follow this structure
+- Army router (example name) should just be ArmyController and return all code there, there is no need for additional separation into additional file “armyController”. This has more logic only if a army router is a mix of multiple army related controllers. But in your case, it is not.
+- Please use this eslint config https://github.com/ezelohar/task-boilerplate/blob/master/.eslintrc-node ‑ Connect your account to preview links Using it will change a nice amount of your code. Please try to implement as much as you can. If you don’t want to implement some rule, please argument why.
+- if (!name || !units || !attackStrategy) throw new Error(error.MISSING_PARAMETERS);Never use an if without bracelets . It should be like this https://prnt.sc/pnjqfs
+- if (units < 80 || units > 100)Use some global constants for this units min/max numbers  
+- Same as the above for all if’s where you have to confirm with some value “which can change” like max armies or units etc.
+- Why just one here? https://prnt.sc/pnjsan findOne? Also, why not using the same code as startBattle from the battle controller?
+- .ptch('/battle/start', catchAsyncError(BattleController.startBattle)) Is missing an Id. The route should be something like /battle/:battleId/start
+- The documentation didn’t specify it, but there should be an API route to create a battle, where you will be adding armies and everything.
+- Why mixed approach in writing functions here? https://prnt.sc/pnjwkb
+- If battleUtils are utils, they shouldn’t work with the DB, e.g. think about them as pure functions to do some helping
